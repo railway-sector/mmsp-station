@@ -11,7 +11,7 @@ function UndergroundSwitch() {
 
   useEffect(() => {
     if (arcgisScene) {
-      arcgisScene.map.ground.opacity = underground === true ? 0.7 : 0;
+      arcgisScene.map.ground.opacity = underground === false ? 0.3 : 0.8;
     }
   }, [underground]);
 
@@ -35,13 +35,13 @@ function UndergroundSwitch() {
         }}
       >
         Ground: {""}
-        On{" "}
+        Off{" "}
         <CalciteSwitch
           onCalciteSwitchChange={(event) =>
             setUnderground(event.target.checked)
           }
         ></CalciteSwitch>{" "}
-        Off
+        On
       </div>
     </>
   );
