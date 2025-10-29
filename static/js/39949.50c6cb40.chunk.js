@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkmmsp_station=self.webpackChunkmmsp_station||[]).push([[39949],{39949:(t,s,e)=>{e.r(s),e.d(s,{reset:()=>r});var n=e(3825),o=e(54994),a=e(12001);async function r(t,s,e){const r=(0,o.Dl)(t),c=s.toJSON();s.objects&&(c.objects=JSON.stringify(s.objects));const i={...c,f:"json"},u=(0,o.lF)({...r.query,...i}),f=(0,o.jV)(u,{...e,method:"post"}),p=`${r.path}/unitIdentifiers/reset`,{data:m}=await(0,n.A)(p,f);return a.A.fromJSON(m)}}}]);
+//# sourceMappingURL=39949.50c6cb40.chunk.js.map
