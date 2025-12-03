@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/mmsp-station/static/css/main.19132106.css",
-    "main.js": "/mmsp-station/static/js/main.9ba96a18.js",
+    "main.js": "/mmsp-station/static/js/main.9c629f41.js",
     "static/js/20623.c74fbaf7.chunk.js": "/mmsp-station/static/js/20623.c74fbaf7.chunk.js",
     "static/js/34429.525e61f3.chunk.js": "/mmsp-station/static/js/34429.525e61f3.chunk.js",
     "static/js/74965.5fbc6aa6.chunk.js": "/mmsp-station/static/js/74965.5fbc6aa6.chunk.js",
@@ -624,7 +624,7 @@
     "static/media/09ab0626-bb45-4650-acc8-0182d693df02-hebrew.woff2": "/mmsp-station/static/media/09ab0626-bb45-4650-acc8-0182d693df02-hebrew.34f5f4ec364bd2996c4e.woff2",
     "index.html": "/mmsp-station/index.html",
     "main.19132106.css.map": "/mmsp-station/static/css/main.19132106.css.map",
-    "main.9ba96a18.js.map": "/mmsp-station/static/js/main.9ba96a18.js.map",
+    "main.9c629f41.js.map": "/mmsp-station/static/js/main.9c629f41.js.map",
     "20623.c74fbaf7.chunk.js.map": "/mmsp-station/static/js/20623.c74fbaf7.chunk.js.map",
     "34429.525e61f3.chunk.js.map": "/mmsp-station/static/js/34429.525e61f3.chunk.js.map",
     "74965.5fbc6aa6.chunk.js.map": "/mmsp-station/static/js/74965.5fbc6aa6.chunk.js.map",
@@ -1124,6 +1124,6 @@
   },
   "entrypoints": [
     "static/css/main.19132106.css",
-    "static/js/main.9ba96a18.js"
+    "static/js/main.9c629f41.js"
   ]
 }
