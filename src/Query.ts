@@ -221,7 +221,7 @@ export async function generateChartData(stationname: any) {
     const dwall_comp = stats.total_dwall_comp;
     const column_incomp = stats.total_column_incomp;
     const column_delay = stats.total_column_delay;
-    const column_comp = stats.total_slab_comp;
+    const column_comp = stats.total_column_comp;
     const slab_incomp = stats.total_slab_incomp;
     const slab_delay = stats.total_slab_delay;
     const slab_comp = stats.total_slab_comp;
