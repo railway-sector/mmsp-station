@@ -205,25 +205,27 @@ function ActionPanel() {
 
         <CalcitePanel heading="Description" data-panel-id="information" hidden>
           {nextWidget === "information" ? (
-            <div className="informationDiv">
+            <div style={{ paddingLeft: "20px" }}>
+              This smart map shows the construction progress on structural
+              components of station buildings:
               <ul>
-                <li>
-                  You can <b>filter utility data</b> by contract package,
-                  company, and data type: (point or line) using dropdown lists
-                  in the header panel.
-                </li>
-                <br />
-                <li>
-                  <b>Click bar-chart series</b> to view 'Complete' or
-                  'Incomplete' progress on work status by individual utitliy
-                  types over the map.
-                </li>
-                <br />
-                <li>
-                  Click/unclick widgets icon for viewing Layer list, Legend, and
-                  Basemaps in the action panel.
-                </li>
+                <li>D-Wall, </li>
+                <li>Column, </li>
+                <li>Slab, </li>
+                <li>Kings Post, </li>
+                <li>Secant Pile, </li>
+                <li>Column Head </li>
               </ul>
+              <div style={{ paddingLeft: "20px" }}>
+                <li>
+                  The source of data: <b>Civil 3D.</b>
+                </li>
+                <li>
+                  {" "}
+                  The construction progress is manually updated based on the
+                  information provided by the RE / Civil Team.
+                </li>
+              </div>
             </div>
           ) : (
             <div className="informationDiv" hidden></div>
