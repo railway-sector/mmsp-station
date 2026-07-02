@@ -14,9 +14,11 @@ import "@esri/calcite-components/components/calcite-button";
 import "@esri/calcite-components/components/calcite-segmented-control";
 import "@esri/calcite-components/components/calcite-segmented-control-item";
 import "@esri/calcite-components/components/calcite-button";
+import { useState } from "react";
 
 function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene");
+  const [_mapView, setMapView] = useState<any>();
 
   arcgisScene?.viewOnReady(() => {
     arcgisScene?.map?.add(stationStructureLayer);
@@ -40,6 +42,9 @@ function MapDisplay() {
       viewingMode="local"
       zoom={13}
       center="121.0322874, 14.6750462"
+      onarcgisViewReadyChange={(event: any) => {
+        setMapView(event.target.id);
+      }}
     >
       <arcgis-zoom slot="top-right"></arcgis-zoom>
       <arcgis-compass slot="top-right"></arcgis-compass>

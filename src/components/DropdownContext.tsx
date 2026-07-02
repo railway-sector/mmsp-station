@@ -1,30 +1,45 @@
-import { useState, use, useEffect } from "react";
+import { useState } from "react";
 import Select from "react-select";
 import "../index.css";
-import { MyContext } from "../contexts/MyContext";
 import GenerateDropdownData from "npm-dropdown-package";
 import { stationStructureLayerForDropDown } from "../layers";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { locationKeys } from "../interfaceKeys";
+import type { SelectedLocation } from "../interfaceKeys";
 
 export default function DropdownData() {
-  const { updateStations } = use(MyContext);
-  const [initContractPacakge, setInitContractPacakge] = useState([]);
-  const [stations, setContractPackage] = useState<any>(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const dropdownData = new GenerateDropdownData(
-      [stationStructureLayerForDropDown],
-      ["Station1"],
-    );
+  const [stationSelected, setStationSelected] = useState<null | any>(null);
 
-    dropdownData.dropDownQuery().then((response: any) => {
-      setInitContractPacakge(response);
+  const { data: stationList } = useQuery<any>({
+    queryKey: ["dropdownData"], // Do not add lotLayer as a dependency. The dropdown list will not be updated properly.
+    queryFn: async () => {
+      const dropdownData = new GenerateDropdownData(
+        [stationStructureLayerForDropDown],
+        ["Station1"],
+      );
+      return await dropdownData.dropDownQuery();
+    },
+    staleTime: Infinity, // never refetch in the backround. If not Inifity, it will refetch.
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  // this instantly updates the global cache
+  function updateDropdownListValues(
+    station_obj_field: SelectedLocation["station"],
+  ) {
+    return queryClient.setQueryData<SelectedLocation>(locationKeys.selected, {
+      station: station_obj_field,
     });
-  }, []);
+  }
 
   // handle change event of the Municipality dropdown
   const handleContractPackageChange = (obj: any) => {
-    setContractPackage(obj);
-    updateStations(obj.field1);
+    updateDropdownListValues(obj.field1);
+    setStationSelected(obj);
   };
 
   // Style CSS
@@ -66,8 +81,8 @@ export default function DropdownData() {
       ></div>
       <Select
         placeholder="Select Station"
-        value={stations}
-        options={initContractPacakge}
+        value={stationSelected}
+        options={stationList && stationList}
         onChange={handleContractPackageChange}
         getOptionLabel={(x: any) => x.field1}
         styles={customstyles}
