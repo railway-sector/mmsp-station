@@ -15,6 +15,7 @@ import "@esri/calcite-components/components/calcite-segmented-control";
 import "@esri/calcite-components/components/calcite-segmented-control-item";
 import "@esri/calcite-components/components/calcite-button";
 import { useState } from "react";
+import UndergroundSwitch from "../components/UndergroundSwitch";
 
 function MapDisplay() {
   const arcgisScene = document.querySelector("arcgis-scene");
@@ -48,6 +49,7 @@ function MapDisplay() {
     >
       <arcgis-zoom slot="top-right"></arcgis-zoom>
       <arcgis-compass slot="top-right"></arcgis-compass>
+      <UndergroundSwitch />
     </arcgis-scene>
   );
 }

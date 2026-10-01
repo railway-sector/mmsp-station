@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./index.css";
 import "@arcgis/map-components/dist/components/arcgis-map";
 import "@arcgis/map-components/components/arcgis-map";
@@ -8,10 +8,10 @@ import "@esri/calcite-components/dist/components/calcite-shell";
 import MapDisplay from "./components/MapDisplay";
 import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
-import UndergroundSwitch from "./components/UndergroundSwitch";
 import Chart from "./components/Chart";
 import { authenticate } from "./autho";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MyContext } from "./contexts/MyContext";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +21,12 @@ export function App(): React.JSX.Element {
     authenticate(setLoggedInState, "yW9wxWjdggIw1jyP");
   }, []);
 
+  //--- Parameter update using hook
+  const [station, setStation] = useState<any>(null);
+  const updateStation = useCallback((newStation: any) => {
+    setStation(newStation);
+  }, []);
+
   return (
     <>
       {loggedInState === true ? (
@@ -28,13 +34,14 @@ export function App(): React.JSX.Element {
           <calcite-shell
             style={{ scrollbarWidth: "thin", scrollbarColor: "#888 #555" }}
           >
-            <QueryClientProvider client={queryClient}>
-              <ActionPanel />
-              <UndergroundSwitch />
-              <MapDisplay />
-              <Chart />
-              <Header />
-            </QueryClientProvider>
+            <MyContext value={{ station, updateStation }}>
+              <QueryClientProvider client={queryClient}>
+                <ActionPanel />
+                <MapDisplay />
+                <Chart />
+                <Header />
+              </QueryClientProvider>
+            </MyContext>
           </calcite-shell>
         </div>
       ) : (

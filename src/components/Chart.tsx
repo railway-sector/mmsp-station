@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { chartstack, queryc, stationStructureLayer } from "../layers";
+import { use, useEffect, useRef, useState } from "react";
+import { stationStructureLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import { thousands_separators, zoomToLayer } from "../query";
 import { ArcgisScene } from "@arcgis/map-components/dist/components/arcgis-scene";
 import {
-  chart_colors,
   station_field,
   status_field,
   statusArray,
@@ -13,46 +12,35 @@ import {
   structureCategoryTypes,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { chartRenderer } from "../chartRenderer";
-import { useQuery } from "@tanstack/react-query";
-import { locationKeys, type ChartResponse } from "../interfaceKeys";
+import ChartStackColumns from "chart-stack-column";
+import ChartStackColumnRender from "chart-stack-column-render";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { type ChartResponse } from "../interfaceKeys";
 import { legendSetter, rootSetter } from "../chartSetter";
+import { MyContext } from "../contexts/MyContext";
+import QueryExpressionLayers from "query-layers-expression";
 
-// Draw chart
-const Chart = () => {
-  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-  const legendRef = useRef<unknown | any | undefined>({});
-  const chartRef = useRef<unknown | any | undefined>({});
-  const chartID = "depot-bar";
-
-  const { data: selectedLocation } = useQuery<any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const station = selectedLocation?.station;
-
-  const { data } = useQuery<ChartResponse | any>({
+//-----------------------//
+//     usetStationData   //
+//-----------------------//
+function useStationData(station: string, query: any) {
+  return useQuery<ChartResponse | any>({
     queryKey: [station, status_field, stationStructureLayer],
     queryFn: async () => {
-      queryc.qValues = [station];
-      queryc.qFields = [station_field];
-
       queryDefinitionExpression({
-        queryExpression: queryc.queryExpression(),
+        queryExpression: query.queryExpression(),
         featureLayer: [stationStructureLayer],
       });
 
-      chartstack.qChart = queryc.queryExpression();
-      chartstack.layers = [stationStructureLayer];
-      chartstack.categoryTypes = structureCategoryTypes;
-      chartstack.categoryTypeField = structure_category_field;
-      chartstack.statusState = [1, 2, 3, 4];
-      chartstack.statusField = status_field;
-      const chartData = await chartstack.chartDataStackColumns();
-
-      zoomToLayer(stationStructureLayer, arcgisScene?.view);
+      //--- chart data
+      const chartData = await new ChartStackColumns({
+        where: query,
+        categoryTypes: structureCategoryTypes,
+        categoryTypeField: structure_category_field,
+        layers: [stationStructureLayer],
+        statusField: status_field,
+        statusState: [1, 2, 3, 4],
+      }).chartDataStackColumns();
 
       return {
         chartData: chartData[0] || [],
@@ -60,11 +48,29 @@ const Chart = () => {
         perc_comp: chartData[2] || 0,
       };
     },
-    // staleTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    staleTime: Infinity,
   });
+}
+
+// Draw chart
+const Chart = () => {
+  const { station } = use(MyContext);
+  const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
+
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+  const legendRef = useRef<unknown | any | undefined>({});
+  const chartRef = useRef<unknown | any | undefined>({});
+  const rendererRef = useRef<ChartStackColumnRender | null>(null);
+  const chartID = "depot-bar";
+
+  //--- Query Expression
+  const q1 = new QueryExpressionLayers({
+    qFields: [station_field],
+    qValues: [station],
+  });
+
+  const { data, isLoading } = useStationData(station, q1);
   const chartData = data?.chartData || [];
   const totaln = data?.totaln || 0;
   const perc_comp = data?.perc_comp || 0;
@@ -86,17 +92,44 @@ const Chart = () => {
   // ************************************
   //  Responsive Chart parameters
   // ***********************************
-  const new_fontSize = chartPanelwidth / 20;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_chartIconSize = chartPanelwidth * 0.07;
-  const new_axisFontSize = chartPanelwidth * 0.036;
-  const new_imageSize = chartPanelwidth * 0.035;
-  // const new_resetfiler_buttonSize = chartPanelwidth * 0.05;
+  const fontSize = chartPanelwidth / 20;
+  const valueSize = fontSize * 1.55;
+  const chartIconSize = chartPanelwidth * 0.07;
+  const axisFontSize = chartPanelwidth * 0.036;
+  const imageSize = chartPanelwidth * 0.035;
 
-  // Utility Chart
+  const zoomFiltersRef = useRef(`${station}`);
+  useEffect(() => {
+    const currentZoomFilters = `${station}`;
+
+    if (currentZoomFilters !== zoomFiltersRef.current) {
+      zoomFiltersRef.current = currentZoomFilters;
+      zoomToLayer(stationStructureLayer, arcgisScene?.view);
+    }
+  }, [chartData]);
+
+  //--- Keep click-handler-relevant values fresh without rebuilding the
+  //    chart. view lives here too (not passed statically to the
+  //    renderer) since arcgis-scene's view may not be ready on first
+  //    mount.
+  const configBaseArgs = {
+    revit: false,
+    layers: [stationStructureLayer],
+    buildingLayer: undefined,
+    chartCategoryTypeField: structure_category_field,
+    where: q1,
+    status_field: status_field,
+    view: arcgisScene?.view,
+  };
+
+  const configRef = useRef({ ...configBaseArgs });
+  useEffect(() => {
+    configRef.current = { ...configBaseArgs };
+  }, [data, status_field, arcgisScene]);
+
+  //---  Column Chart Renderer — created ONCE (mount only)
   useEffect(() => {
     const root = rootSetter({ chartID: chartID });
-
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false,
@@ -124,41 +157,59 @@ const Chart = () => {
       x: 60,
       y: 97,
       marginTop: 20,
-      scale: 0.8,
       layout: root.horizontalLayout,
     });
     legendRef.current = legend;
 
-    chartRenderer({
-      root: root,
-      chart: chart,
-      layers: [stationStructureLayer],
-      data: chartData,
-      qChart: queryc,
+    //--- NOTE: no `view` here — it's read live from configRef.current
+    //    inside chartrender.ts, since arcgis-scene may not have a
+    //    ready `.view` yet at this point.
+    const renderer = new ChartStackColumnRender({
+      root,
+      chart,
+      data: [],
+      configRef,
       chartCategoryTypes: structureCategoryTypes,
-      chartCategoryFieldScene: structure_category_field,
-      statusTypename: ["Completed", "To be Constructed", "Under Construction"], //["Completed", "To be Constructed", "Under Construction"],
-      statusStatename: ["comp", "incomp", "ongoing"], //["comp", "incomp", "ongoing"],
+      statusTypename: ["Completed", "To be Constructed"],
+      statusStatename: ["comp", "incomp"],
       statusArray: statusArray,
-      statusField: status_field,
-      seriesStatusColor: chart_colors,
+      seriesStatusColor: statusArray.map((c: any) => c.color),
       strokeColor: chartBorderLineColor,
       strokeWidth: chartBorderLineWidth,
-      arcgisScene: arcgisScene,
-      new_chartIconSize: new_chartIconSize,
-      new_axisFontSize: new_axisFontSize,
-      chartIconPositionX: chartIconPositionX,
-      chartPaddingRightIconLabel: chartPaddingRightIconLabel,
-      legend: legend,
+      chartIconSize,
+      axisFontSize,
+      chartIconPositionX,
+      chartPaddingRightIconLabel,
+      legend,
       updateChartPanelwidth: setChartPanelwidth,
     });
-
-    chart.appear(1000, 100);
+    rendererRef.current = renderer;
+    renderer.chartRendererColumn();
 
     return () => {
       root.dispose();
+      rendererRef.current = null;
     };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  //--- Push new data / inner value / affected-area figures into the
+  //    already-mounted chart. No dispose, no rebuild -> no blink.
+  //    NOTE: affectedAreaValue is NOT called here directly — it's
+  //    registered once inside chartrender.ts and reads live data via
+  //    closures, which updateData() keeps in sync. Calling it here on
+  //    every render would both miss the first paint and stack
+  //    duplicate adapters.
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer || !chartPanelwidth) return; // wait for a real width
+
+    //--- Sizes are captured at construction, so refresh them here
+    renderer.chartIconSize = chartIconSize;
+    renderer.axisFontSize = axisFontSize;
+
+    renderer.updateData(chartData);
+  }, [chartData, chartPanelwidth]);
 
   const primaryLabelColor = "#9ca3af";
   const valueLabelColor = "#d1d5db";
@@ -190,15 +241,19 @@ const Chart = () => {
           <img
             src="https://EijiGorilla.github.io/Symbols/Station_Structures_icon.svg"
             alt="Station Structure Logo"
-            height={`${new_imageSize}%`}
-            width={`${new_imageSize}%`}
-            style={{ paddingTop: "20px", paddingLeft: "10px" }}
+            height={`${imageSize}%`}
+            width={`${imageSize}%`}
+            style={{
+              paddingTop: "20px",
+              paddingLeft: "10px",
+              opacity: isLoading ? 0 : 1,
+            }}
           />
           <dl style={{ alignItems: "center" }}>
             <dt
               style={{
                 color: primaryLabelColor,
-                fontSize: `${new_fontSize}px`,
+                fontSize: `${fontSize}px`,
                 marginRight: "20px",
               }}
             >
@@ -207,11 +262,12 @@ const Chart = () => {
             <dd
               style={{
                 color: valueLabelColor,
-                fontSize: `${new_valueSize}px`,
+                fontSize: `${valueSize}px`,
                 fontWeight: "bold",
                 fontFamily: "calibri",
                 lineHeight: "1.2",
                 margin: "auto",
+                opacity: isLoading ? 0 : 1,
               }}
             >
               {perc_comp} %
@@ -219,9 +275,10 @@ const Chart = () => {
             <div
               style={{
                 color: valueLabelColor,
-                fontSize: `${new_valueSize * 0.6}px`,
+                fontSize: `${valueSize * 0.6}px`,
                 fontFamily: "calibri",
                 lineHeight: "1.2",
+                opacity: isLoading ? 0 : 1,
               }}
             >
               ({thousands_separators(totaln)})
@@ -237,6 +294,7 @@ const Chart = () => {
             color: "white",
             marginRight: "10px",
             marginTop: "7%",
+            opacity: isLoading ? 0 : 1,
           }}
         ></div>
         <div
