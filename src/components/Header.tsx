@@ -73,10 +73,10 @@ function Header() {
           </div>
 
           <img
-            src="https://EijiGorilla.github.io/Symbols/Projec_Logo/GCR LOGO.png"
-            alt="GCR Logo"
+            src="https://EijiGorilla.github.io/Symbols/Projec_Logo/MMSP.png"
+            alt="MMSP Logo"
             height={"50px"}
-            width={"75px"}
+            width={"97px"}
           />
         </div>
       </header>
