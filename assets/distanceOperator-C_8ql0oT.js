@@ -1,0 +1,1 @@
+import{OperatorDistance as f}from"./OperatorDistance-h8dwahNn.js";import{fD as i}from"./index-Z_o9v4Jf.js";import{fromGeometry as o,getSpatialReference as m}from"./apiConverter-CDKdYWRP.js";const n=new f;function g(t,s,a={}){let{unit:r}=a,e=n.execute(o(t),o(s),null);if(e&&r){let p=m(t);e=i(e,p,r)}return e}n.supportsCurves();export{g as o};
